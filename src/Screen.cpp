@@ -1,4 +1,5 @@
 #include "Screen.h"
+#include <iomanip>
 
 using namespace scr;
 
@@ -15,22 +16,43 @@ bool Screen::init()
     }
 
     //window initialization
-    window = SDL_CreateWindow("Particle Explosion", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
+    window = SDL_CreateWindow(
+        "Particle Explosion",
+        SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+        SCREEN_WIDTH, SCREEN_HEIGHT,
+        SDL_WINDOW_SHOWN);
+
     if (window == NULL)
         return false;
 
     //renderer initialization
-    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+    renderer = SDL_CreateRenderer(
+        window,
+        -1, 
+        SDL_RENDERER_ACCELERATED);
     if (renderer == NULL)
         return false;
-
+    SDL_RendererInfo info;
+   
+    SDL_GetRendererInfo(renderer, &info);
+    std::cout << "Renderer name: " << info.name << std::endl;
+    std::cout << "Texture formats: " << std::endl;
+    for (Uint32 i = 0; i < info.num_texture_formats; i++)
+    {
+        std::cout << SDL_GetPixelFormatName(info.texture_formats[i]) << std::endl;
+    }
     //texture initialization
-    texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, SCREEN_WIDTH, SCREEN_HEIGHT);
+    texture = SDL_CreateTexture(
+        renderer, 
+        SDL_PIXELFORMAT_RGBA8888, 
+        SDL_TEXTUREACCESS_STREAMING,
+        SCREEN_WIDTH, SCREEN_HEIGHT);
     if (texture == NULL)
         return false;
 
-    //mem buffer initialization
+    //first call to check functionality 
     buffer = new Uint32[SCREEN_WIDTH * SCREEN_HEIGHT];
+   
     if (buffer == NULL)
         return false;
 
@@ -42,7 +64,7 @@ bool Screen::init()
         return false;
     //Update the screen with any rendering performed since the last call
     SDL_RenderPresent(renderer);
-
+    
     return true;
 }
 
@@ -56,10 +78,42 @@ bool Screen::processEvents() {
     return true;
 }
 
+void Screen::update() {
+    SDL_UpdateTexture(this->texture, NULL, buffer, SCREEN_WIDTH * sizeof(Uint32));
+    SDL_RenderClear(this->renderer);
+    SDL_RenderCopy(this->renderer, this->texture, NULL, NULL);
+    SDL_RenderPresent(this->renderer);
+}
+
+void Screen::setPixel(int x, int y, Uint8 red, Uint8 green,  Uint8 blue ) {
+    if (x<0 ||   x >= scr::Screen::SCREEN_WIDTH || y<0|| y >= scr::Screen::SCREEN_HEIGHT)
+        return;
+    Uint32 color = 0;
+
+    //shift with 8 bits, then add the color to form an RGB corespondant
+    color += red;
+    color <<= 8;
+    
+    color += green;
+    color <<= 8;
+    
+    color += blue;
+    color <<= 8;
+    
+    color += 0xFF; //finally add the alpha value
+
+    buffer[(y * SCREEN_WIDTH) + x] = color; //indexing the screen matrix using the 1d array method
+}
+
+void Screen::clearScreen() {
+    //setting the whole screen to black
+    memset(buffer, 0, scr::Screen::SCREEN_HEIGHT * scr::Screen::SCREEN_WIDTH * sizeof(Uint32));
+
+   }
+
+
 void Screen::close()
 {
-    if(buffer!=NULL)
-        delete[] buffer;
     if (window != NULL)
         SDL_DestroyWindow(window);
     if (renderer != NULL)

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -160,10 +160,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\Particle.cpp" />
     <ClCompile Include="src\Screen.cpp" />
+    <ClCompile Include="src\Swarm.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\Particle.h" />
     <ClInclude Include="include\Screen.h" />
+    <ClInclude Include="include\Swarm.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
