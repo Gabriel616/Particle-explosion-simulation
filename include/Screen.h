@@ -15,7 +15,8 @@ namespace scr
         SDL_Window* window;
         SDL_Renderer* renderer;
         SDL_Texture* texture;
-        Uint32* buffer;
+        Uint32* buffer_initial;
+        Uint32* buffer_blur;
        
     public:
         Screen();
@@ -25,7 +26,7 @@ namespace scr
         void close();
         void setPixel(int x, int y, Uint8 red, Uint8 blue, Uint8 Green );
         void clearScreen();
-      
+        void boxBlur();
 
         ~Screen();
     };

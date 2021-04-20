@@ -32,7 +32,7 @@ int main(int argc, char* argv[])
 
 		//update particles
 		sw.updateSwarm(elapsed);
-		sc1.clearScreen();
+		//sc1.clearScreen();
 
 		//generate colors
 		unsigned char red = (unsigned char)((1 + sin(elapsed * 0.0002)) * 128);
@@ -47,6 +47,9 @@ int main(int argc, char* argv[])
 			int y = sw.getSwarm()[i].getY() * scr:: Screen::SCREEN_WIDTH / 2 + scr::Screen::SCREEN_HEIGHT/2;
 			sc1.setPixel(x, y, red, blue, green);
 		}
+		//box blur
+		sc1.boxBlur();
+
 		//draw the screen
 		sc1.update();
 			

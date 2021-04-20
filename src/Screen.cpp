@@ -3,7 +3,7 @@
 
 using namespace scr;
 
-Screen::Screen() : window(NULL), renderer(NULL), texture(NULL), buffer(NULL)
+Screen::Screen() : window(NULL), renderer(NULL), texture(NULL), buffer_initial(NULL), buffer_blur(NULL)
 {
 }
 
@@ -51,12 +51,13 @@ bool Screen::init()
         return false;
 
     //first call to check functionality 
-    buffer = new Uint32[SCREEN_WIDTH * SCREEN_HEIGHT];
+    buffer_initial = new Uint32[SCREEN_WIDTH * SCREEN_HEIGHT];
+    buffer_blur = new Uint32[SCREEN_WIDTH * SCREEN_HEIGHT];
    
-    if (buffer == NULL)
+    if (buffer_initial == NULL)
         return false;
 
-    if (SDL_UpdateTexture(texture, NULL, buffer, SCREEN_WIDTH * sizeof(Uint32)) != 0)
+    if (SDL_UpdateTexture(texture, NULL, buffer_initial, SCREEN_WIDTH * sizeof(Uint32)) != 0)
         return false;
     if (SDL_RenderClear(renderer) != 0)
         return false;
@@ -79,7 +80,7 @@ bool Screen::processEvents() {
 }
 
 void Screen::update() {
-    SDL_UpdateTexture(this->texture, NULL, buffer, SCREEN_WIDTH * sizeof(Uint32));
+    SDL_UpdateTexture(this->texture, NULL, buffer_initial, SCREEN_WIDTH * sizeof(Uint32));
     SDL_RenderClear(this->renderer);
     SDL_RenderCopy(this->renderer, this->texture, NULL, NULL);
     SDL_RenderPresent(this->renderer);
@@ -102,14 +103,56 @@ void Screen::setPixel(int x, int y, Uint8 red, Uint8 green,  Uint8 blue ) {
     
     color += 0xFF; //finally add the alpha value
 
-    buffer[(y * SCREEN_WIDTH) + x] = color; //indexing the screen matrix using the 1d array method
+    buffer_initial[(y * SCREEN_WIDTH) + x] = color; //indexing the screen matrix using the 1d array method
 }
 
 void Screen::clearScreen() {
     //setting the whole screen to black
-    memset(buffer, 0, scr::Screen::SCREEN_HEIGHT * scr::Screen::SCREEN_WIDTH * sizeof(Uint32));
+    memset(buffer_initial, 0, scr::Screen::SCREEN_HEIGHT * scr::Screen::SCREEN_WIDTH * sizeof(Uint32));
+    //memset(buffer_blur, 0, scr::Screen::SCREEN_HEIGHT * scr::Screen::SCREEN_WIDTH * sizeof(Uint32));
 
    }
+
+void Screen::boxBlur() {
+    Uint32* temp;
+    temp = buffer_initial;
+    buffer_initial = buffer_blur;
+    buffer_blur = temp;
+
+    //iterating through all the pixels
+    for (int y = 0; y < scr::Screen::SCREEN_HEIGHT; y++) {
+        for (int x = 0; x < scr::Screen::SCREEN_WIDTH;x++) {
+            //defining the box 
+
+            int redTotal = 0;
+            int blueTotal = 0;
+            int greenTotal = 0;
+            for (int row = -1; row <= 1; row++) {
+                for (int col = -1; col <= 1; col++) {
+                    int xcurrent = x + row;
+                    int ycurrent = y + col;
+
+                    if (xcurrent >= 0 && xcurrent < SCREEN_WIDTH && ycurrent >= 0 && ycurrent < SCREEN_HEIGHT) {
+
+                        Uint32  color = buffer_blur[ycurrent * scr::Screen::SCREEN_WIDTH + xcurrent];
+                        Uint8 red = color >> 24; //shift with 24 bites to obtain the red 
+                        Uint8 blue = color >> 16;
+                        Uint8 green = color >> 8;
+
+                        redTotal += red;
+                        blueTotal += blue;
+                        greenTotal += green;
+                    }
+                }
+            }
+            Uint8 red = redTotal / 9;
+            Uint8 blue = blueTotal / 9;
+            Uint8 green = greenTotal / 9;
+
+            setPixel(x, y, red, green, blue);
+        }
+    }
+}
 
 
 void Screen::close()
